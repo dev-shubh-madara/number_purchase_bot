@@ -91,6 +91,6 @@ python main.py
 
 <div align="center">
 
-Developed with ❤️ by **SUDEEPBOTS [𝐌꧊᱂ 𝁛 ꪜᛧƖƖ𝛂ᛧ𝝶](https://t.me/I_VIP_RADHE_II)**
+Developed with ❤️ by **[𝐃𝐞𝐦𝐨𝐧](https://t.me/Demon_x_coder_aura)**
 
 </div>

@@ -14,12 +14,12 @@ async def send_main_menu(bot, event, uid):
     bal = bal_row[0] if bal_row else 0
     bot_username = me.username or ""
     PFP_URL = "assets/image.jpg"
-    msg = (f"<blockquote>{PE_HEART} <b>𝐖ᴇʟᴄᴏᴍᴇ ᴛᴏ 𝐅ʀᴇsʜ 𝐓ɢ 𝐒ᴛᴏʀᴇ!</b></blockquote>\n\n"
+    msg = (f"<blockquote>{PE_HEART} <b>𝐖ᴇʟᴄᴏᴍᴇ ᴛᴏ 𝐆𝐌𝐒!</b></blockquote>\n\n"
            f"<blockquote>{PE_GIFT} <b>𝐏ʀᴇᴍɪᴜᴍ sᴇʀᴠɪᴄᴇs:</b> 𝐁ᴜʏ ᴀᴄᴄᴏᴜɴᴛs, sᴇssɪᴏɴs, ᴀɴᴅ ᴛᴏᴘ ᴜᴘ ɪɴsᴛᴀɴᴛʟʏ.</blockquote>\n\n"
            f"<blockquote>{P_GIFT} <b>𝐑ᴇғᴇʀ & 𝐄ᴀʀɴ:</b>\n𝐈ɴᴠɪᴛᴇ ғʀɪᴇɴᴅs ᴀɴᴅ ᴇᴀʀɴ {pct}% ᴏғ ᴛʜᴇɪʀ ᴅᴇᴘᴏsɪᴛs!\n"
            f"{P_GLOBE} <code>https://t.me/{bot_username}?start=ref_{uid}</code></blockquote>\n\n"
            f"<blockquote>💰 <b>𝐁ᴀʟᴀɴᴄᴇ:</b> {P_INR}{bal}</blockquote>\n\n"
-           f"<blockquote>👨‍💻 <b>𝐃ᴇᴠᴇʟᴏᴘᴇʀ:</b> <a href='https://t.me/I_VIP_RADHE_II'>𝐌꧊᱂ 𝁛 ꪜᛧƖƖ𝛂ᛧ𝝶</a></blockquote>")
+           f"<blockquote>👨‍💻 <b>𝐃ᴇᴠᴇʟᴏᴘᴇʀ:</b> <a href='https://t.me/Demon_x_coder_aura'>𝐃𝐞𝐦𝐨𝐧</a></blockquote>")
     
     f = await bot.upload_file(PFP_URL)
     media = types.InputMediaUploadedPhoto(file=f)

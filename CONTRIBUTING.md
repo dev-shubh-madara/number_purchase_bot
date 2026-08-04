@@ -52,4 +52,4 @@ If you find a bug or issue:
 
 ## 📧 Support
 
-For direct support or feature requests, contact: **[𝐌꧊᱂ 𝁛 ꪜᛧƖƖ𝛂ᛧ𝝶](https://t.me/I_VIP_RADHE_II)**
+For direct support or feature requests, contact: **[𝐃𝐞𝐦𝐨𝐧](https://t.me/Demon_x_coder_aura)**

@@ -14,11 +14,14 @@ def style_url(text, url, style_type=None, icon=None):
 
 
 def get_terms_buttons():
-    return [
-        [Button.url("📜 Read Terms & Conditions", TERMS_URL)],
-        [style_btn("𝐀ᴄᴄᴇᴘᴛ", b"tc_accept", style_type='success', icon=5409380965644514142), 
-         style_btn("𝐑ᴇᴊᴇᴄᴛ", b"tc_reject", style_type='danger', icon=5354889508674360491)]
-    ]
+    buttons = []
+    if TERMS_URL and TERMS_URL.startswith("http"):
+        buttons.append([Button.url("📜 Read Terms & Conditions", TERMS_URL)])
+    buttons.append([
+        style_btn("𝐀ᴄᴄᴇᴘᴛ", b"tc_accept", style_type='success', icon=5409380965644514142),
+        style_btn("𝐑ᴇᴊᴇᴄᴛ", b"tc_reject", style_type='danger', icon=5354889508674360491)
+    ])
+    return buttons
 
 def get_join_buttons():
     buttons = [[Button.url(f"📢 Join Channel {i+1}", link)] for i, link in enumerate(JOIN_URLS) if link]
@@ -42,8 +45,9 @@ def get_persistent_menu(uid):
 def get_support_buttons():
     buttons = [
         [Button.url("📩 Support", get_support_url())],
-        [Button.url("📜 Terms & Conditions", TERMS_URL)]
     ]
+    if TERMS_URL and TERMS_URL.startswith("http"):
+        buttons.append([Button.url("📜 Terms & Conditions", TERMS_URL)])
     if JOIN_URLS:
         buttons.append([Button.url("📢 Channel", JOIN_URLS[0])])
     return buttons

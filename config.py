@@ -26,7 +26,8 @@ load_env_file()
 def env_int(name, default=0):
     raw = os.getenv(name)
     if raw is None or str(raw).strip() == "": return default
-    return int(str(raw).strip())
+    # Support comma-separated values — take the first one
+    return int(str(raw).strip().split(",")[0].strip())
 
 def env_list(name, default_csv):
     raw = os.getenv(name, default_csv)

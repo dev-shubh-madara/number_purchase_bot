@@ -8,7 +8,7 @@ db_path = "otp_bot_final.db"
 # We'll use absolute path or same dir. We can symlink later if needed, but let's just use the current path
 # Better yet, since we will run from Numbott_Telethon, let's use the DB from ../Numbott to share it, or copy it.
 # Let's just point to it directly:
-db = sqlite3.connect("../Numbott/otp_bot_final.db", check_same_thread=False, timeout=20)
+db = sqlite3.connect("otp_bot_final.db", check_same_thread=False, timeout=20)
 db.execute("PRAGMA journal_mode=WAL;")
 cur = db.cursor()
 

@@ -33,6 +33,7 @@ def get_persistent_menu(uid):
     from telethon import Button
     buttons = [
         [Button.text("🛒 𝐁ᴜʏ 𝐀ᴄᴄᴏᴜɴᴛ", style="success", icon=5440627033111557670), Button.text("💳 𝐃ᴇᴘᴏsɪᴛ", style="primary", icon=5409271925014801629)],
+        [Button.text("📁 𝐁ᴏᴛ 𝐑ᴇᴘᴏs", style="primary", icon=5409271925014801629), Button.text("📊 𝐒𝐌𝐌 𝐒ᴇʀᴠɪᴄᴇs", style="success", icon=5409098988156629257)],
         [Button.text("👤 𝐏ʀᴏғɪʟᴇ", style="primary", icon=6203982793379154737), Button.text("📦 𝐌ʏ 𝐎ʀᴅᴇʀs", style="primary", icon=5409098988156629257)],
         [Button.text("💰 𝐁ᴀʟᴀɴᴄᴇ", style="success", icon=5409320020058584473), Button.text("📊 𝐒ᴛᴏᴄᴋ", style="primary", icon=6129627894349045589)],
         [Button.text("🎁 𝐑ᴇғᴇʀ", style="success", icon=5354889508674360491), Button.text("📩 𝐒ᴜᴘᴘᴏʀᴛ", style="primary", icon=6129732880529628243)],

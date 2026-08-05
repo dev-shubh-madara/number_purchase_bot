@@ -190,6 +190,68 @@ async def admin_actions(event):
         await event.answer("✅ Admin Removed", alert=True)
         return await manage_admins_menu(event)
 
+    elif action_data == "managesmm" and has_perm(uid, 'p_add_stock'):
+        rows = cur.execute("SELECT id, name, category, price_per_1000, available FROM smm_services ORDER BY category, id").fetchall()
+        if not rows:
+            return await event.edit("📊 <b>Manage SMM Services</b>\n\nNo services added yet.",
+                                    buttons=[[style_btn("Back", "adm_adminmain", "danger", icon=6129888444245089008)]])
+        btns = []
+        for sid, name, cat, price, avail in rows:
+            status = "✅" if avail else "❌"
+            btns.append([style_btn(f"{status} [{cat}] {name[:30]} — {P_INR}{price}/1K", f"adm_delsmm|{sid}", "danger", icon=6129888444245089008)])
+        btns.append([style_btn("Back", "adm_adminmain", "danger", icon=6129888444245089008)])
+        return await event.edit("📊 <b>Manage SMM Services</b>\n\n<i>Tap a service to delete it:</i>", buttons=btns)
+
+    elif action_data.startswith("delsmm|") and has_perm(uid, 'p_add_stock'):
+        sid = int(action_data.split("|")[1])
+        row = cur.execute("SELECT name FROM smm_services WHERE id=?", (sid,)).fetchone()
+        if row:
+            cur.execute("DELETE FROM smm_services WHERE id=?", (sid,))
+            db.commit()
+            await event.answer(f"✅ Service '{row[0]}' deleted!", alert=True)
+        rows = cur.execute("SELECT id, name, category, price_per_1000, available FROM smm_services ORDER BY category, id").fetchall()
+        if not rows:
+            return await event.edit("📊 <b>Manage SMM Services</b>\n\nNo services remaining.",
+                                    buttons=[[style_btn("Back", "adm_adminmain", "danger", icon=6129888444245089008)]])
+        btns = []
+        for r_id, name, cat, price, avail in rows:
+            status = "✅" if avail else "❌"
+            btns.append([style_btn(f"{status} [{cat}] {name[:30]} — {P_INR}{price}/1K", f"adm_delsmm|{r_id}", "danger", icon=6129888444245089008)])
+        btns.append([style_btn("Back", "adm_adminmain", "danger", icon=6129888444245089008)])
+        return await event.edit("📊 <b>Manage SMM Services</b>\n\n<i>Tap a service to delete it:</i>", buttons=btns)
+
+    elif action_data == "managerepos" and has_perm(uid, 'p_add_stock'):
+        rows = cur.execute("SELECT id, name, price, available FROM repos ORDER BY id DESC").fetchall()
+        if not rows:
+            return await event.edit(f"💻 <b>𝐌ᴀɴᴀɢᴇ 𝐁ᴏᴛ 𝐑ᴇᴘᴏs</b>\n\nNo repos added yet.",
+                                    buttons=[[style_btn("Back", "adm_adminmain", "danger", icon=6129888444245089008)]])
+        btns = []
+        for rid, name, price, avail in rows:
+            status = "✅" if avail else "❌"
+            btns.append([style_btn(f"{status} {name} — {P_INR}{price}", f"adm_delrepo|{rid}", "danger", icon=6129888444245089008)])
+        btns.append([style_btn("Back", "adm_adminmain", "danger", icon=6129888444245089008)])
+        return await event.edit(f"💻 <b>𝐌ᴀɴᴀɢᴇ 𝐁ᴏᴛ 𝐑ᴇᴘᴏs</b>\n\n<i>Tap any repo to delete it:</i>", buttons=btns)
+
+    elif action_data.startswith("delrepo|") and has_perm(uid, 'p_add_stock'):
+        rid = int(action_data.split("|")[1])
+        row = cur.execute("SELECT name, zip_file FROM repos WHERE id=?", (rid,)).fetchone()
+        if row:
+            if row[1] and os.path.exists(row[1]):
+                os.remove(row[1])
+            cur.execute("DELETE FROM repos WHERE id=?", (rid,))
+            db.commit()
+            await event.answer(f"✅ Repo '{row[0]}' deleted!", alert=True)
+        rows = cur.execute("SELECT id, name, price, available FROM repos ORDER BY id DESC").fetchall()
+        if not rows:
+            return await event.edit(f"💻 <b>𝐌ᴀɴᴀɢᴇ 𝐁ᴏᴛ 𝐑ᴇᴘᴏs</b>\n\nNo repos remaining.",
+                                    buttons=[[style_btn("Back", "adm_adminmain", "danger", icon=6129888444245089008)]])
+        btns = []
+        for r_id, name, price, avail in rows:
+            status = "✅" if avail else "❌"
+            btns.append([style_btn(f"{status} {name} — {P_INR}{price}", f"adm_delrepo|{r_id}", "danger", icon=6129888444245089008)])
+        btns.append([style_btn("Back", "adm_adminmain", "danger", icon=6129888444245089008)])
+        return await event.edit(f"💻 <b>𝐌ᴀɴᴀɢᴇ 𝐁ᴏᴛ 𝐑ᴇᴘᴏs</b>\n\n<i>Tap any repo to delete it:</i>", buttons=btns)
+
     elif action_data == "managestock" and has_perm(uid, 'p_manage_stock'): return await send_manage_stock_page(event, 1)
     elif action_data.startswith("mspg|") and has_perm(uid, 'p_manage_stock'): return await send_manage_stock_page(event, int(action_data.split("|")[1]))
     elif action_data.startswith("msc|") and has_perm(uid, 'p_manage_stock'): return await send_manage_stock_country(event, action_data.split("|")[1])
@@ -333,6 +395,53 @@ async def admin_actions(event):
                     db.commit()
                     await conv.send_message(f"{P_YES} Deleted!")
                 except: await conv.send_message(f"{P_NO} Invalid ID.")
+
+            elif action_data == "addsmm" and has_perm(uid, 'p_add_stock'):
+                name = html.escape((await get_reply(
+                    f"📊 <b>Enter Service Name:</b>\n<i>(e.g., Instagram Followers [High Quality])</i>"
+                )).text.strip())
+                category = html.escape((await get_reply(
+                    f"📌 <b>Enter Category:</b>\n<i>(e.g., Instagram, YouTube, TikTok, Telegram)</i>"
+                )).text.strip())
+                fansmm_id = (await get_reply(
+                    f"🆔 <b>Enter FanSMM Service ID:</b>\n<i>Find it on fansmm.in → Services list</i>"
+                )).text.strip()
+                min_qty = int((await get_reply(f"📉 <b>Enter Minimum Quantity:</b>")).text.strip())
+                max_qty = int((await get_reply(f"📈 <b>Enter Maximum Quantity:</b>")).text.strip())
+                price_per_1000 = int((await get_reply(
+                    f"{P_MONEY} <b>Enter Our Price per 1000 (₹):</b>\n<i>Set higher than fansmm cost for profit</i>"
+                )).text.strip())
+                desc = html.escape((await get_reply(
+                    f"📝 <b>Enter Description:</b>\n<i>(Shown to buyers — quality, speed, etc.)</i>"
+                )).text.strip())
+                cur.execute(
+                    "INSERT INTO smm_services (name, category, fansmm_service_id, min_qty, max_qty, price_per_1000, description, available) VALUES (?,?,?,?,?,?,?,1)",
+                    (name, category, fansmm_id, min_qty, max_qty, price_per_1000, desc)
+                )
+                db.commit()
+                await conv.send_message(
+                    f"{P_YES} <b>SMM Service Added!</b>\n\n"
+                    f"📊 <b>{name}</b>\n"
+                    f"📌 Category: {category}\n"
+                    f"🆔 FanSMM ID: <code>{fansmm_id}</code>\n"
+                    f"{P_MONEY} Price: {P_INR}{price_per_1000}/1000\n"
+                    f"📉 Min: {min_qty} | 📈 Max: {max_qty}"
+                )
+
+            elif action_data == "addrepo" and has_perm(uid, 'p_add_stock'):
+                name = html.escape((await get_reply(f"💻 <b>Enter Repo Name:</b>\n<i>(e.g., Session Spammer Bot)</i>")).text.strip())
+                desc = html.escape((await get_reply(f"📝 <b>Enter Repo Description:</b>\n<i>(Brief description shown to buyers)</i>")).text.strip())
+                price = int((await get_reply(f"{P_MONEY} <b>Enter Price ({P_INR}):</b>")).text.strip())
+                zip_msg = await get_reply(f"📦 <b>Send the ZIP file for this repo:</b>")
+                if not zip_msg.file or not (zip_msg.file.name or "").endswith('.zip'):
+                    return await conv.send_message(f"{P_NO} Invalid file. Please send a <code>.zip</code> file.")
+                os.makedirs("repos", exist_ok=True)
+                safe_name = name[:20].replace(' ', '_').replace('/', '_')
+                zip_path = f"repos/repo_{int(time.time())}_{safe_name}.zip"
+                await bot.download_media(zip_msg, zip_path)
+                cur.execute("INSERT INTO repos (name, description, price, zip_file, available) VALUES (?,?,?,?,1)", (name, desc, price, zip_path))
+                db.commit()
+                await conv.send_message(f"{P_YES} <b>Repo Added!</b>\n💻 <b>{name}</b>\n{P_MONEY} Price: {P_INR}{price}\n📦 File saved. Users can now buy it!")
 
             elif action_data == "addzip" and has_perm(uid, 'p_add_stock'):
                 resp = await get_reply(f"{P_PKG} <b>Send the ZIP file containing <code>.session</code> files:</b>")

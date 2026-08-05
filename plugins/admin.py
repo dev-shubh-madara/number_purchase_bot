@@ -34,6 +34,16 @@ async def admin_panel_handler(event):
         r2.extend([style_btn("Manage Stock", "adm_managestock", "success", icon=6129731974291527294), style_btn("Auto Price", "adm_autoprice", "primary", icon=5409098988156629257)])
     if r2: btns.append(r2)
 
+    r_repo = []
+    if uid == ADMIN_ID or has_perm(uid, 'p_add_stock'):
+        r_repo.extend([style_btn("➕ Add Repo", "adm_addrepo", "success", icon=5409271925014801629), style_btn("💻 Manage Repos", "adm_managerepos", "primary", icon=5409098988156629257)])
+    if r_repo: btns.append(r_repo)
+
+    r_smm = []
+    if uid == ADMIN_ID or has_perm(uid, 'p_add_stock'):
+        r_smm.extend([style_btn("➕ Add SMM Service", "adm_addsmm", "success", icon=5409098988156629257), style_btn("📊 Manage SMM", "adm_managesmm", "primary", icon=5409271925014801629)])
+    if r_smm: btns.append(r_smm)
+
     r3 = []
     if uid == ADMIN_ID or has_perm(uid, 'p_stats'):
         r3.extend([style_btn("Statistics", "adm_stats", "primary", icon=5409098988156629257), style_btn("Broadcast", "adm_bcast", "primary", icon=5409098988156629257)])

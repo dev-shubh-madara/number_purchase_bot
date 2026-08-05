@@ -87,6 +87,47 @@ def setup_db():
         name TEXT,
         flag TEXT
     );
+    CREATE TABLE IF NOT EXISTS smm_services (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        category TEXT,
+        fansmm_service_id TEXT,
+        min_qty INTEGER DEFAULT 10,
+        max_qty INTEGER DEFAULT 100000,
+        price_per_1000 INTEGER,
+        description TEXT DEFAULT '',
+        available INTEGER DEFAULT 1,
+        added_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS smm_orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        service_id INTEGER,
+        service_name TEXT,
+        link TEXT,
+        quantity INTEGER,
+        price INTEGER,
+        fansmm_order_id TEXT,
+        status TEXT DEFAULT 'pending',
+        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS repos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        description TEXT DEFAULT '',
+        price INTEGER,
+        zip_file TEXT,
+        available INTEGER DEFAULT 1,
+        added_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS repo_orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        repo_id INTEGER,
+        repo_name TEXT,
+        price INTEGER,
+        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
     """)
     db.commit()
 

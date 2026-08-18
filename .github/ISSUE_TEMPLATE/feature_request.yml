@@ -13,3 +13,4 @@ body:
       description: Describe the feature you would like to see added.
     validations:
       required: true
+

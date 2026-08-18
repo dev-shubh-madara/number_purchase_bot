@@ -1,3 +1,6 @@
+#MADE_BY_MADARA
+#TRUE LODA LOVE
+
 import asyncio
 from telethon import Button
 from telethon.errors import UserNotParticipantError, ChatAdminRequiredError

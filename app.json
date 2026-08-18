@@ -1,7 +1,7 @@
 {
   "name": "Numbott Telethon",
   "description": "Advanced Modular Telegram Account Shop Bot with Custom UI and Multi-Payment Systems.",
-  "repository": "https://github.com/SUDEEPBOTS/Numbott",
+  "repository": "https://github.com/ragini19854-prog/number_purchase_bot",
   "logo": "https://cdn.worldvectorlogo.com/logos/telegram-1.svg",
   "keywords": ["telegram", "bot", "shop", "telethon", "python"],
   "env": {

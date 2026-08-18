@@ -31,3 +31,4 @@ fi
 
 echo "🟢  Starting the bot..."
 python main.py
+

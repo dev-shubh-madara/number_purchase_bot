@@ -50,3 +50,4 @@ for filepath in files:
         f.write(content)
 
 print("Icons randomized.")
+

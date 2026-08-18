@@ -1,3 +1,6 @@
+#MADE_BY_MADARA
+#TRUE LODA LOVE
+
 import os
 import re
 import html

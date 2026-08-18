@@ -1,3 +1,6 @@
+#MADE_BY_MADARA
+#TRUE LODA LOVE
+
 import os
 from telethon import events, Button
 from telethon.errors import MessageNotModifiedError

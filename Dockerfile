@@ -18,3 +18,4 @@ COPY . .
 
 # Run the application
 CMD ["python3", "main.py"]
+

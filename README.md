@@ -43,11 +43,11 @@ LOG_CHANNEL_ID_2=-100387593353
 
 # Must Join Verification Setup
 CHECK_CHANNELS=-1003964347575,-1004481651864,-1003875933534
-JOIN_URLS=https://t.me/I_VIP_RADHE_II,https://t.me/+rdXT1GR_nCg1OTg1,https://t.me/sivamXpruff
+JOIN_URLS=https://t.me/I_VIP_RADHE_II,https://t.me/,https://t.me/
 
 # Payment Credentials
-CWALLET_ID=93020854
-UPI_ID=vinit-godara@fam
+CWALLET_ID=98833049
+UPI_ID=vinit-shubh412@fam
 ```
 
 ---
@@ -56,7 +56,7 @@ UPI_ID=vinit-godara@fam
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/SUDEEPBOTS/Numbott.git
+git clone [https://github.com/ragini19854-prog/number_purchase_bot]
 cd Numbott
 ```
 

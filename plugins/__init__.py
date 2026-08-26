@@ -7,6 +7,7 @@ from plugins.smm import register_smm
 from plugins.admin import register_admin
 from plugins.admin_actions import register_admin_actions
 from plugins.callbacks import register_callbacks
+from plugins.auto_stock import register_auto_stock
 
 def register_all_handlers(bot):
     register_start(bot)
@@ -18,3 +19,4 @@ def register_all_handlers(bot):
     register_admin(bot)
     register_admin_actions(bot)
     register_callbacks(bot)
+    register_auto_stock(bot)

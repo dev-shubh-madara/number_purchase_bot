@@ -129,6 +129,24 @@ def setup_db():
         date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
     """)
+    # Keep existing installations compatible when new stock accounting fields
+    # are introduced. SQLite has no IF NOT EXISTS form for ADD COLUMN.
+    existing_columns = {
+        row[1] for row in cur.execute("PRAGMA table_info(stock)").fetchall()
+    }
+    if "cost_price" not in existing_columns:
+        cur.execute("ALTER TABLE stock ADD COLUMN cost_price INTEGER DEFAULT 0")
+    if "profit" not in existing_columns:
+        cur.execute("ALTER TABLE stock ADD COLUMN profit INTEGER DEFAULT 0")
+
+    existing_order_columns = {
+        row[1] for row in cur.execute("PRAGMA table_info(orders)").fetchall()
+    }
+    if "cost_price" not in existing_order_columns:
+        cur.execute("ALTER TABLE orders ADD COLUMN cost_price INTEGER DEFAULT 0")
+    if "profit" not in existing_order_columns:
+        cur.execute("ALTER TABLE orders ADD COLUMN profit INTEGER DEFAULT 0")
+
     db.commit()
 
 setup_db()
@@ -159,7 +177,7 @@ def get_usdt_rate():
 
 def get_support_url():
     res = cur.execute("SELECT value FROM settings WHERE key='support_url'").fetchone()
-    url = res[0] if res and res[0] else "https://t.me/tgtelehelpbot"
+    url = res[0] if res and res[0] else "https://t.me/+rch2KH1HNnpiZjg1"
     if not url.startswith("http"): url = "https://" + url.replace("@", "t.me/")
     return url
 

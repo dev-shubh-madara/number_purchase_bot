@@ -14,6 +14,7 @@ from config import *
 from utils.keyboards import style_btn
 from utils.states import admin_state
 from plugins.admin import admin_panel_handler
+from plugins.auto_stock import begin_auto_upload
 
 async def detect_account_year(client):
     """Detect account creation year from earliest dialog/message."""
@@ -147,6 +148,16 @@ async def admin_actions(event):
         await admin_panel_handler(FakeEvent())
         await event.delete()
         return
+
+    if action_data == "autoadd" and has_perm(uid, "p_add_stock"):
+        begin_auto_upload(uid)
+        return await event.edit(
+            f"{P_PKG} <b>Automatic Stock Import</b>\n\n"
+            f"Send a <code>.session</code> file or a ZIP containing session files now.\n"
+            f"The bot will validate authorized accounts, detect country/year, skip 2FA accounts, "
+            f"and add a fixed ₹{max(0, ACCOUNT_PROFIT)} profit to the configured base price.\n\n"
+            f"<i>Type /cancel to stop waiting.</i>"
+        )
 
     elif action_data == "stats" and has_perm(uid, 'p_stats'):
         u_row = cur.execute("SELECT COUNT(*) FROM users").fetchone()

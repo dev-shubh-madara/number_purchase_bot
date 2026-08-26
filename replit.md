@@ -30,6 +30,8 @@ python main.py
 | `JOIN_URLS` | Comma-separated invite links matching CHECK_CHANNELS order |
 | `CWALLET_ID` | CWallet wallet address/ID for crypto deposits |
 | `UPI_ID` | UPI address for Indian payments (e.g. name@bank) |
+| `ACCOUNT_PROFIT` | Fixed markup in INR for automatic account-stock imports (default: `7`) |
+| `AUTO_STOCK_DEFAULT_COST` | Fallback base price in INR when no country auto-price exists (default: `28`) |
 
 ### Optional secrets
 
@@ -67,3 +69,6 @@ assets/
 - All payments are **manually verified** — no automatic payment confirmation. Admin approves/rejects via the log channel.
 - The bot must be added as **admin** to all log channels and must-join channels.
 - Session files for stock accounts should be stored in the `sessions/` directory.
+- To import stock automatically, open the Admin Panel, tap **Auto Add Stock**, then send
+  a `.session` file or a ZIP containing session files. Only authorized accounts without
+  2FA are added; the configured `ACCOUNT_PROFIT` is added to the base price.

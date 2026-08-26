@@ -9,6 +9,116 @@ from database import cur, db, get_flag_by_country_name
 from config import PE_LOCATION, PE_GIFT, PE_LIGHTNING, PE_CHECK, P_MONEY, P_PKG, P_CARD, P_WARN, P_NO, P_YES, P_INR, P_TIME, P_FLAG, P_OTP, P_2FA, P_PHONE, AUTO_CANCEL_SECONDS, OTP_REGEX, bot, logger, API_ID, API_HASH
 from utils.keyboards import style_btn
 from utils.states import active_orders, session_buy_state, get_user_lock
+from otpx import OTPX_COUNTRIES, acquire_number, cancel_number, wait_for_code
+
+async def show_server_choices(event):
+    msg = f"<blockquote>{PE_GIFT} <b>𝐂ʜᴏᴏsᴇ 𝐀ᴄᴄᴏᴜɴᴛ sᴇʀᴠᴇʀ</b>\n\nSelect where you want to buy the account:</blockquote>"
+    buttons = [
+        [style_btn("𝐒ᴇʀᴠᴇʀ-𝟏 • 𝐎ᴜʀ 𝐀ᴅᴅᴇᴅ 𝐀ᴄᴄᴏᴜɴᴛs", "buy_server|local", "primary", icon=6129732880529628243)],
+        [style_btn("𝐒ᴇʀᴠᴇʀ-𝟐 • 𝐏ᴀɴᴇʟ sᴛᴏᴄᴋ", "buy_server|otpx", "success", icon=5409320020058584473)],
+    ]
+    if isinstance(event, events.CallbackQuery.Event):
+        await event.edit(msg, buttons=buttons)
+    else:
+        await event.respond(msg, buttons=buttons)
+
+async def show_otpx_countries(event):
+    if not OTPX_COUNTRIES:
+        return await event.edit(f"{P_WARN} Server-2 is not configured yet.")
+    buttons = [
+        [style_btn(f"{country.flag} {country.name} • {P_INR}{country.price}", f"otpx_country|{country.code}", "primary", icon=5408998980416362034)]
+        for country in OTPX_COUNTRIES
+    ]
+    buttons.append([style_btn("𝐁ᴀᴄᴋ", "buy_server|back", "danger", icon=6129812419028982717)])
+    await event.edit(
+        f"<blockquote>{PE_LOCATION} <b>𝐒ᴇʀᴠᴇʀ-𝟐 𝐏ᴀɴᴇʟ sᴛᴏᴄᴋ</b>\n\n"
+        f"Choose a country. Prices include your configured commission.</blockquote>",
+        buttons=buttons,
+    )
+
+def get_otpx_country(code):
+    return next((country for country in OTPX_COUNTRIES if country.code == code), None)
+
+async def confirm_otpx_purchase(event, country):
+    await event.edit(
+        f"<blockquote>{PE_GIFT} <b>𝐂ᴏɴғɪʀᴍ 𝐏ᴀɴᴇʟ 𝐏ᴜʀᴄʜᴀsᴇ</b>\n\n"
+        f"{country.flag} <b>Country:</b> {country.name}\n"
+        f"{P_MONEY} <b>Price:</b> {P_INR}{country.price}\n\n"
+        f"Your balance will be charged after OTPX confirms a number is available.</blockquote>",
+        buttons=[
+            [style_btn("𝐂ᴏɴғɪʀᴍ 𝐁ᴜʏ", f"otpx_buy|{country.code}", "success", icon=5409320020058584473)],
+            [style_btn("𝐂ᴀɴᴄᴇʟ", "cancel_action", "danger", icon=6129888444245089008)],
+        ],
+    )
+
+async def process_otpx_purchase(event, country):
+    uid = event.sender_id
+    async with get_user_lock(uid):
+        row = cur.execute("SELECT balance FROM users WHERE user_id=?", (uid,)).fetchone()
+        balance = row[0] if row else 0
+        if balance < country.price:
+            return await event.answer(f"Insufficient balance. Add ₹{country.price - balance} more.", alert=True)
+
+    await event.edit(f"{PE_LIGHTNING} <b>Contacting Server-2 panel...</b>\nPlease wait.")
+    try:
+        activation_id, phone = await acquire_number(country)
+    except Exception as exc:
+        logger.error("OTPX number purchase failed: %s", exc)
+        return await event.edit(f"{P_NO} <b>Server-2 could not provide a number.</b>\nTry again later.")
+
+    async with get_user_lock(uid):
+        cur.execute("UPDATE users SET balance = balance - ? WHERE user_id=? AND balance >= ?", (country.price, uid, country.price))
+        if cur.rowcount == 0:
+            try:
+                await cancel_number(activation_id)
+            except Exception:
+                pass
+            return await event.edit(f"{P_NO} <b>Insufficient balance.</b> The panel order was cancelled.")
+        db.commit()
+
+    sent = await event.edit(
+        f"<blockquote>{PE_LIGHTNING} <b>𝐒ᴇʀᴠᴇʀ-𝟐 𝐎ʀᴅᴇʀ 𝐀ᴄᴛɪᴠᴇ</b>\n\n"
+        f"{P_PHONE} <b>Number:</b> <code>{phone}</code>\n"
+        f"{country.flag} <b>Country:</b> {country.name}\n"
+        f"{P_TIME} Waiting for the OTP from the panel...</blockquote>"
+    )
+    try:
+        code = await wait_for_code(activation_id, AUTO_CANCEL_SECONDS)
+    except Exception as exc:
+        logger.error("OTPX OTP wait failed for %s: %s", activation_id, exc)
+        try:
+            await cancel_number(activation_id)
+        except Exception:
+            pass
+        async with get_user_lock(uid):
+            cur.execute("UPDATE users SET balance = balance + ? WHERE user_id=?", (country.price, uid))
+            db.commit()
+        return await bot.edit_message(uid, sent.id, f"{P_TIME} <b>Server-2 order expired.</b>\nYour {P_INR}{country.price} has been refunded.")
+
+    async with get_user_lock(uid):
+        cur.execute(
+            "INSERT INTO orders "
+            "(user_id, country, year, price, phone, otp, cost_price, profit) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            (
+                uid,
+                country.name,
+                0,
+                country.price,
+                phone,
+                code,
+                country.cost,
+                max(0, country.price - country.cost),
+            ),
+        )
+        db.commit()
+    await bot.edit_message(
+        uid,
+        sent.id,
+        f"<blockquote>{PE_CHECK} <b>𝐒ᴇʀᴠᴇʀ-𝟐 𝐎𝐓𝐏 𝐑ᴇᴄᴇɪᴠᴇᴅ</b>\n\n"
+        f"{P_PHONE} <b>Number:</b> <code>{phone}</code>\n"
+        f"{P_OTP} <b>OTP:</b> <code><tg-spoiler>{code}</tg-spoiler></code></blockquote>",
+    )
 
 async def show_countries(event, mode, page):
     limit = 12
@@ -61,10 +171,14 @@ async def process_purchase(event, country, year, price_str):
     uid, price = event.sender_id, int(price_str)
     
     async with get_user_lock(uid):
-        row = cur.execute("SELECT phone, session_file, twofa FROM stock WHERE country_name=? AND account_year=? AND price=? AND available=1 LIMIT 1", (country, int(year), price)).fetchone()
+        row = cur.execute(
+            "SELECT phone, session_file, twofa, cost_price, profit "
+            "FROM stock WHERE country_name=? AND account_year=? AND price=? AND available=1 LIMIT 1",
+            (country, int(year), price),
+        ).fetchone()
         if not row: return await event.answer("❌ Out of stock!", alert=True)
         
-        phone, sess, twofa_pass = row
+        phone, sess, twofa_pass, cost_price, stock_profit = row
         
         disc_row = cur.execute("SELECT discount FROM users WHERE user_id=?", (uid,)).fetchone()
         discount = disc_row[0] if disc_row else 0
@@ -108,7 +222,8 @@ async def process_purchase(event, country, year, price_str):
     
     active_orders[phone] = {
         'uid': uid, 'client': client, 'sess': sess, 'start_time': time.time(), 
-        'paid': False, 'price': final_price, 'country': country, 'year': actual_year, 
+        'paid': False, 'price': final_price, 'cost_price': cost_price,
+        'stock_profit': stock_profit, 'country': country, 'year': actual_year,
         'c_icon': c_icon, 'twofa': twofa_pass, 'msg_id': sent_msg.id
     }
     asyncio.create_task(auto_otp_task(phone))
@@ -141,7 +256,21 @@ async def auto_otp_task(phone):
                 if not order['paid']:
                     order['paid'] = True
                     async with get_user_lock(uid):
-                        cur.execute("INSERT INTO orders (user_id, country, year, price, phone, otp) VALUES (?,?,?,?,?,?)", (uid, order['country'], order['year'], order['price'], phone, code))
+                        cur.execute(
+                            "INSERT INTO orders "
+                            "(user_id, country, year, price, phone, otp, cost_price, profit) "
+                            "VALUES (?,?,?,?,?,?,?,?)",
+                            (
+                                uid,
+                                order["country"],
+                                order["year"],
+                                order["price"],
+                                phone,
+                                code,
+                                order.get("cost_price", 0),
+                                max(0, order["price"] - order.get("cost_price", 0)),
+                            ),
+                        )
                         cur.execute("DELETE FROM stock WHERE phone=?", (phone,))
                         db.commit()
                 
@@ -175,8 +304,31 @@ async def auto_otp_task(phone):
 def register_buy(bot):
     @bot.on(events.NewMessage(pattern=r"(?i)^(🛒 𝐁ᴜʏ 𝐀ᴄᴄᴏᴜɴᴛ|🛒 Buy Account|📁 Buy Sessions)$"))
     async def msg_buy(e):
-        mode = 'single' if 'Account' in e.text else 'bulk'
-        await show_countries(e, mode, 1)
+        await show_server_choices(e)
+
+    @bot.on(events.CallbackQuery(pattern=r"^buy_server\|(.+)$"))
+    async def cb_buy_server(e):
+        choice = e.pattern_match.group(1).decode()
+        if choice == "local":
+            await show_countries(e, "single", 1)
+        elif choice == "otpx":
+            await show_otpx_countries(e)
+        elif choice == "back":
+            await show_server_choices(e)
+
+    @bot.on(events.CallbackQuery(pattern=r"^otpx_country\|(\d+)$"))
+    async def cb_otpx_country(e):
+        country = get_otpx_country(e.pattern_match.group(1).decode())
+        if not country:
+            return await e.answer("Country configuration not found.", alert=True)
+        await confirm_otpx_purchase(e, country)
+
+    @bot.on(events.CallbackQuery(pattern=r"^otpx_buy\|(\d+)$"))
+    async def cb_otpx_buy(e):
+        country = get_otpx_country(e.pattern_match.group(1).decode())
+        if not country:
+            return await e.answer("Country configuration not found.", alert=True)
+        await process_otpx_purchase(e, country)
 
     @bot.on(events.CallbackQuery(pattern=r"^bc\|(.+)\|(.+)$"))
     async def cb_bc(e):
@@ -224,7 +376,21 @@ def register_buy(bot):
                 if not order['paid']:
                     order['paid'] = True
                     async with get_user_lock(uid):
-                        cur.execute("INSERT INTO orders (user_id, country, year, price, phone, otp) VALUES (?,?,?,?,?,?)", (uid, order['country'], order['year'], order['price'], phone, code))
+                        cur.execute(
+                            "INSERT INTO orders "
+                            "(user_id, country, year, price, phone, otp, cost_price, profit) "
+                            "VALUES (?,?,?,?,?,?,?,?)",
+                            (
+                                uid,
+                                order["country"],
+                                order["year"],
+                                order["price"],
+                                phone,
+                                code,
+                                order.get("cost_price", 0),
+                                max(0, order["price"] - order.get("cost_price", 0)),
+                            ),
+                        )
                         cur.execute("DELETE FROM stock WHERE phone=?", (phone,))
                         db.commit()
                 twofa_text = f"{P_2FA} <b>2FA:</b> <code>{order['twofa']}</code>" if order['twofa'] != "None" else f"🔓 <b>2FA:</b> <code>Disabled (No Password)</code>"

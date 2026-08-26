@@ -26,7 +26,11 @@ async def admin_panel_handler(event):
         
     r1 = []
     if uid == ADMIN_ID or has_perm(uid, 'p_add_stock'):
-        r1.extend([style_btn("Add Single Acc", "adm_addstock", "primary", icon=6129732880529628243), style_btn("Add ZIP", "adm_addzip", "primary", icon=5355292788923593967)])
+        r1.extend([
+            style_btn("Add Single Acc", "adm_addstock", "primary", icon=6129732880529628243),
+            style_btn("Add ZIP", "adm_addzip", "primary", icon=5355292788923593967),
+        ])
+        r1.append(style_btn("Auto Add Stock", "adm_autoadd", "success", icon=5409320020058584473))
     if r1: btns.append(r1)
 
     r2 = []

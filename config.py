@@ -23,6 +23,21 @@ def load_env_file(path=".env"):
 
 load_env_file()
 
+# ================= PERSISTENT DATA DIR (RAILWAY VOLUME) =================
+# On Railway (and most PaaS free tiers) the container filesystem is wiped on
+# every redeploy/restart. This bot stores its SQLite DB *and* the sold
+# Telegram account session files locally, so without this you lose your
+# entire inventory + balances on every deploy.
+#
+# Fix: create a Railway Volume, mount it at e.g. /data, and set:
+#   DATA_DIR=/data
+# Everything below (db file, sessions/ folder) will then live on that volume
+# and survive redeploys. Leave DATA_DIR unset to keep the old behavior.
+DATA_DIR = os.getenv("DATA_DIR", "").strip()
+if DATA_DIR:
+    os.makedirs(DATA_DIR, exist_ok=True)
+    os.chdir(DATA_DIR)
+
 def env_int(name, default=0):
     raw = os.getenv(name)
     if raw is None or str(raw).strip() == "": return default
@@ -60,6 +75,17 @@ UPI_ID = os.getenv("UPI_ID", "")
 
 OTP_REGEX = r"\b\d{4,8}\b"
 AUTO_CANCEL_SECONDS = 600
+OTPX_API_KEY = os.getenv("OTPX_API_KEY", "").strip()
+OTPX_SERVICE = os.getenv("OTPX_SERVICE", "tg").strip() or "tg"
+
+# Automatic account-stock intake. The automatic importer treats configured
+# auto-prices or the fallback cost as the supplier/base price, then adds this
+# fixed markup to the customer-facing stock price.
+ACCOUNT_PROFIT = env_int("ACCOUNT_PROFIT", 7)
+AUTO_STOCK_DEFAULT_COST = env_int("AUTO_STOCK_DEFAULT_COST", 28)
+AUTO_STOCK_UPLOAD_ENABLED = os.getenv("AUTO_STOCK_UPLOAD_ENABLED", "1").strip().lower() not in {
+    "0", "false", "no", "off"
+}
 
 # ================= PREMIUM EMOJIS =================
 USE_PREMIUM_EMOJIS = os.getenv("USE_PREMIUM_EMOJIS", "1").strip().lower() not in {"0", "false", "no", "off"}
